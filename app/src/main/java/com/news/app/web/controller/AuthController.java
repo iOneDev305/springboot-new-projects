@@ -4,24 +4,21 @@ import com.news.app.domain.modal.ApiResponse;
 import com.news.app.domain.modal.User;
 import com.news.app.domain.repository.UserRepository;
 import com.news.app.infrastructure.security.JwtTokenProvider;
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
 import lombok.Data;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/auth")
-@CrossOrigin(origins = "*", allowedHeaders = "*")
 public class AuthController {
 
     @Autowired
@@ -36,8 +33,8 @@ public class AuthController {
     @Autowired
     private JwtTokenProvider tokenProvider;
 
-    @PostMapping(value = "/login", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
+    @PostMapping("/login")
+    public ResponseEntity<?> authenticateUser(@RequestBody LoginRequest loginRequest) {
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         loginRequest.getUsername(),
@@ -51,8 +48,8 @@ public class AuthController {
         return ResponseEntity.ok(ApiResponse.success(new JwtAuthenticationResponse(jwt)));
     }
 
-    @PostMapping(value = "/register", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> registerUser(@Valid @RequestBody SignUpRequest signUpRequest) {
+    @PostMapping("/register")
+    public ResponseEntity<?> registerUser(@RequestBody SignUpRequest signUpRequest) {
         if (userRepository.existsByUsername(signUpRequest.getUsername())) {
             return ResponseEntity.badRequest()
                     .body(ApiResponse.error(400, "Username is already taken!"));
@@ -76,25 +73,14 @@ public class AuthController {
 
 @Data
 class LoginRequest {
-    @NotBlank(message = "Username is required")
     private String username;
-
-    @NotBlank(message = "Password is required")
     private String password;
 }
 
 @Data
 class SignUpRequest {
-    @NotBlank(message = "Username is required")
-    @Size(min = 3, max = 20, message = "Username must be between 3 and 20 characters")
     private String username;
-
-    @NotBlank(message = "Email is required")
-    @Email(message = "Email should be valid")
     private String email;
-
-    @NotBlank(message = "Password is required")
-    @Size(min = 6, message = "Password must be at least 6 characters")
     private String password;
 }
 

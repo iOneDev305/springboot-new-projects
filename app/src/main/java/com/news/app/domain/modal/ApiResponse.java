@@ -31,13 +31,4 @@ public class ApiResponse<T> {
         response.setMessage(message);
         return response;
     }
-
-    public static <T> ApiResponse<T> error(int code, String message, T data) {
-        ApiResponse<T> response = new ApiResponse<>();
-        response.setSuccess(false);
-        response.setCode(code);
-        response.setMessage(message);
-        response.setData(data);
-        return response;
-    }
 } 
