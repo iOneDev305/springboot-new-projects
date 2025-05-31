@@ -13,9 +13,4 @@ public class NewsApp {
 		SpringApplication.run(NewsApp.class, args);
 	}
 
-	@GetMapping("/news")
-	public String getNews() {
-		return "Latest news articles will be displayed here.";
-	}
-
 }
