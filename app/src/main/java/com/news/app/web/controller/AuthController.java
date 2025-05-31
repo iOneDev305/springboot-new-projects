@@ -115,10 +115,45 @@ public class AuthController {
     }
 
     @GetMapping("/index")
-    public ResponseEntity<?> getAllUsers() {
-        logger.info("Fetching all users");
+    public ResponseEntity<?> getAllUsers(
+            @RequestParam(required = false) String token,
+            @RequestParam(required = false) String timestamp) {
+        logger.info("Fetching all users with token and timestamp");
 
         try {
+            // Check if required parameters exist
+            if (token == null) {
+                logger.warn("Missing required field: token");
+                return ResponseEntity.status(400)
+                        .body(ApiResponse.error(400, "Missing required field: token"));
+            }
+
+            if (timestamp == null) {
+                logger.warn("Missing required field: timestamp");
+                return ResponseEntity.status(400)
+                        .body(ApiResponse.error(400, "Missing required field: timestamp"));
+            }
+
+            // Check if parameters are empty
+            if (token.isEmpty()) {
+                logger.warn("Token cannot be empty");
+                return ResponseEntity.status(400)
+                        .body(ApiResponse.error(400, "Token cannot be empty"));
+            }
+
+            if (timestamp.isEmpty()) {
+                logger.warn("Timestamp cannot be empty");
+                return ResponseEntity.status(400)
+                        .body(ApiResponse.error(400, "Timestamp cannot be empty"));
+            }
+
+            // Validate token
+            if (!tokenProvider.validateToken(token)) {
+                logger.warn("Invalid or expired token provided");
+                return ResponseEntity.status(401)
+                        .body(ApiResponse.error(401, "Invalid or expired token. Please login again"));
+            }
+
             List<User> users = userRepository.findAll();
             logger.info("Found {} users", users.size());
             return ResponseEntity.ok(ApiResponse.success(users));
