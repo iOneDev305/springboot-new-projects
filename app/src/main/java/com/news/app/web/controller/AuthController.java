@@ -4,7 +4,9 @@ import com.news.app.domain.modal.ApiResponse;
 import com.news.app.domain.modal.User;
 import com.news.app.domain.repository.UserRepository;
 import com.news.app.infrastructure.security.JwtTokenProvider;
-import lombok.Data;
+import com.news.app.web.dto.auth.LoginRequest;
+import com.news.app.web.dto.auth.SignUpRequest;
+import com.news.app.web.dto.auth.JwtAuthenticationResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -162,28 +164,5 @@ public class AuthController {
             return ResponseEntity.badRequest()
                     .body(ApiResponse.error(400, "Error fetching users: " + e.getMessage()));
         }
-    }
-}
-
-@Data
-class LoginRequest {
-    private String username;
-    private String password;
-}
-
-@Data
-class SignUpRequest {
-    private String username;
-    private String email;
-    private String password;
-}
-
-@Data
-class JwtAuthenticationResponse {
-    private String accessToken;
-    private String tokenType = "Bearer";
-
-    public JwtAuthenticationResponse(String accessToken) {
-        this.accessToken = accessToken;
     }
 }
