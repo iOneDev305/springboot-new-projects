@@ -1,0 +1,19 @@
+src/
+├── domain/              → Core business rules (independent of framework)
+│   ├── model/           → Entities (User, News, Category)
+│   ├── repository/      → Interfaces (e.g., NewsRepository)
+│   └── service/         → Interfaces (e.g., AuthService)
+│
+├── application/         → Application logic, use cases
+│   └── service/         → Implementation of domain services
+│
+├── infrastructure/      → DB, security, config (framework-specific)
+│   ├── persistence/     → JPA Repositories, entity mapping
+│   ├── security/        → JWT, authentication config
+│   └── config/          → App config (e.g., security config)
+│
+├── web/                 → REST API layer (controllers, DTOs)
+│   ├── controller/      → API controllers
+│   └── dto/             → Request & response classes
+│
+└── Application.java     → Main class (SpringBootApplication)
