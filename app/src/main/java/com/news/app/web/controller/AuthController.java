@@ -17,6 +17,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import java.util.List;
 
 @RestController
 @RequestMapping(value = "/api/auth", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -38,12 +39,12 @@ public class AuthController {
     @PostMapping(value = "/login", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> authenticateUser(@RequestBody LoginRequest loginRequest) {
         logger.info("Login attempt for user: {}", loginRequest.getUsername());
-        
+
         try {
             // Check if user exists
             User user = userRepository.findByUsername(loginRequest.getUsername())
                     .orElse(null);
-            
+
             if (user == null) {
                 logger.warn("Login failed: User not found - {}", loginRequest.getUsername());
                 return ResponseEntity.badRequest()
@@ -51,7 +52,7 @@ public class AuthController {
             }
 
             logger.debug("Found user: {}", user.getUsername());
-            
+
             // Verify password
             if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
                 logger.warn("Login failed: Invalid password for user - {}", loginRequest.getUsername());
@@ -62,13 +63,11 @@ public class AuthController {
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
                             loginRequest.getUsername(),
-                            loginRequest.getPassword()
-                    )
-            );
+                            loginRequest.getPassword()));
 
             SecurityContextHolder.getContext().setAuthentication(authentication);
             String jwt = tokenProvider.generateToken(authentication);
-            
+
             logger.info("Login successful for user: {}", loginRequest.getUsername());
             return ResponseEntity.ok(ApiResponse.success(new JwtAuthenticationResponse(jwt)));
         } catch (BadCredentialsException e) {
@@ -85,7 +84,7 @@ public class AuthController {
     @PostMapping(value = "/register", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> registerUser(@RequestBody SignUpRequest signUpRequest) {
         logger.info("Registration attempt for user: {}", signUpRequest.getUsername());
-        
+
         try {
             if (userRepository.existsByUsername(signUpRequest.getUsername())) {
                 logger.warn("Registration failed: Username already taken - {}", signUpRequest.getUsername());
@@ -112,6 +111,21 @@ public class AuthController {
             logger.error("Registration failed: {}", e.getMessage());
             return ResponseEntity.badRequest()
                     .body(ApiResponse.error(400, "Registration failed: " + e.getMessage()));
+        }
+    }
+
+    @GetMapping("/index")
+    public ResponseEntity<?> getAllUsers() {
+        logger.info("Fetching all users");
+
+        try {
+            List<User> users = userRepository.findAll();
+            logger.info("Found {} users", users.size());
+            return ResponseEntity.ok(ApiResponse.success(users));
+        } catch (Exception e) {
+            logger.error("Error fetching users: {}", e.getMessage());
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.error(400, "Error fetching users: " + e.getMessage()));
         }
     }
 }
