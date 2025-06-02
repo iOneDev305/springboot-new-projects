@@ -38,17 +38,19 @@ public class AuthController {
     @Autowired
     private JwtTokenProvider tokenProvider;
 
-    @PostMapping(value = "/login", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> authenticateUser(@RequestBody LoginRequest loginRequest) {
-        logger.info("Login attempt for user: {}", loginRequest.getUsername());
+    @PostMapping(value = "/login", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> authenticateUser(
+            @RequestParam("username") String username,
+            @RequestParam("password") String password) {
+        logger.info("Login attempt for user: {}", username);
 
         try {
             // Check if user exists
-            User user = userRepository.findByUsername(loginRequest.getUsername())
+            User user = userRepository.findByUsername(username)
                     .orElse(null);
 
             if (user == null) {
-                logger.warn("Login failed: User not found - {}", loginRequest.getUsername());
+                logger.warn("Login failed: User not found - {}", username);
                 return ResponseEntity.badRequest()
                         .body(ApiResponse.error(400, "User not found"));
             }
@@ -56,28 +58,28 @@ public class AuthController {
             logger.debug("Found user: {}", user.getUsername());
 
             // Verify password
-            if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
-                logger.warn("Login failed: Invalid password for user - {}", loginRequest.getUsername());
+            if (!passwordEncoder.matches(password, user.getPassword())) {
+                logger.warn("Login failed: Invalid password for user - {}", username);
                 return ResponseEntity.badRequest()
                         .body(ApiResponse.error(400, "Invalid password"));
             }
 
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
-                            loginRequest.getUsername(),
-                            loginRequest.getPassword()));
+                            username,
+                            password));
 
             SecurityContextHolder.getContext().setAuthentication(authentication);
             String jwt = tokenProvider.generateToken(authentication);
 
-            logger.info("Login successful for user: {}", loginRequest.getUsername());
+            logger.info("Login successful for user: {}", username);
             return ResponseEntity.ok(ApiResponse.success(new JwtAuthenticationResponse(jwt)));
         } catch (BadCredentialsException e) {
-            logger.error("Login failed: Bad credentials for user: {} - {}", loginRequest.getUsername(), e.getMessage());
+            logger.error("Login failed: Bad credentials for user: {} - {}", username, e.getMessage());
             return ResponseEntity.badRequest()
                     .body(ApiResponse.error(400, "Invalid username or password"));
         } catch (Exception e) {
-            logger.error("Login failed for user: {} - Error: {}", loginRequest.getUsername(), e.getMessage());
+            logger.error("Login failed for user: {} - Error: {}", username, e.getMessage());
             return ResponseEntity.badRequest()
                     .body(ApiResponse.error(400, "Authentication failed: " + e.getMessage()));
         }
