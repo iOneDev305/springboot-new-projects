@@ -4,7 +4,9 @@ import com.news.app.domain.modal.ApiResponse;
 import com.news.app.domain.modal.User;
 import com.news.app.domain.repository.UserRepository;
 import com.news.app.infrastructure.security.JwtTokenProvider;
-import lombok.Data;
+import com.news.app.web.dto.auth.LoginRequest;
+import com.news.app.web.dto.auth.SignUpRequest;
+import com.news.app.web.dto.auth.JwtAuthenticationResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -17,6 +19,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import java.util.List;
 
 @RestController
 @RequestMapping(value = "/api/auth", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -38,12 +41,12 @@ public class AuthController {
     @PostMapping(value = "/login", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> authenticateUser(@RequestBody LoginRequest loginRequest) {
         logger.info("Login attempt for user: {}", loginRequest.getUsername());
-        
+
         try {
             // Check if user exists
             User user = userRepository.findByUsername(loginRequest.getUsername())
                     .orElse(null);
-            
+
             if (user == null) {
                 logger.warn("Login failed: User not found - {}", loginRequest.getUsername());
                 return ResponseEntity.badRequest()
@@ -51,7 +54,7 @@ public class AuthController {
             }
 
             logger.debug("Found user: {}", user.getUsername());
-            
+
             // Verify password
             if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
                 logger.warn("Login failed: Invalid password for user - {}", loginRequest.getUsername());
@@ -62,13 +65,11 @@ public class AuthController {
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
                             loginRequest.getUsername(),
-                            loginRequest.getPassword()
-                    )
-            );
+                            loginRequest.getPassword()));
 
             SecurityContextHolder.getContext().setAuthentication(authentication);
             String jwt = tokenProvider.generateToken(authentication);
-            
+
             logger.info("Login successful for user: {}", loginRequest.getUsername());
             return ResponseEntity.ok(ApiResponse.success(new JwtAuthenticationResponse(jwt)));
         } catch (BadCredentialsException e) {
@@ -85,7 +86,7 @@ public class AuthController {
     @PostMapping(value = "/register", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> registerUser(@RequestBody SignUpRequest signUpRequest) {
         logger.info("Registration attempt for user: {}", signUpRequest.getUsername());
-        
+
         try {
             if (userRepository.existsByUsername(signUpRequest.getUsername())) {
                 logger.warn("Registration failed: Username already taken - {}", signUpRequest.getUsername());
@@ -114,27 +115,54 @@ public class AuthController {
                     .body(ApiResponse.error(400, "Registration failed: " + e.getMessage()));
         }
     }
-}
 
-@Data
-class LoginRequest {
-    private String username;
-    private String password;
-}
+    @GetMapping("/index")
+    public ResponseEntity<?> getAllUsers(
+            @RequestParam(required = false) String token,
+            @RequestParam(required = false) String timestamp) {
+        logger.info("Fetching all users with token and timestamp");
 
-@Data
-class SignUpRequest {
-    private String username;
-    private String email;
-    private String password;
-}
+        try {
+            // Check if required parameters exist
+            if (token == null) {
+                logger.warn("Missing required field: token");
+                return ResponseEntity.status(400)
+                        .body(ApiResponse.error(400, "Missing required field: token"));
+            }
 
-@Data
-class JwtAuthenticationResponse {
-    private String accessToken;
-    private String tokenType = "Bearer";
+            if (timestamp == null) {
+                logger.warn("Missing required field: timestamp");
+                return ResponseEntity.status(400)
+                        .body(ApiResponse.error(400, "Missing required field: timestamp"));
+            }
 
-    public JwtAuthenticationResponse(String accessToken) {
-        this.accessToken = accessToken;
+            // Check if parameters are empty
+            if (token.isEmpty()) {
+                logger.warn("Token cannot be empty");
+                return ResponseEntity.status(400)
+                        .body(ApiResponse.error(400, "Token cannot be empty"));
+            }
+
+            if (timestamp.isEmpty()) {
+                logger.warn("Timestamp cannot be empty");
+                return ResponseEntity.status(400)
+                        .body(ApiResponse.error(400, "Timestamp cannot be empty"));
+            }
+
+            // Validate token
+            if (!tokenProvider.validateToken(token)) {
+                logger.warn("Invalid or expired token provided");
+                return ResponseEntity.status(401)
+                        .body(ApiResponse.error(401, "Invalid or expired token. Please login again"));
+            }
+
+            List<User> users = userRepository.findAll();
+            logger.info("Found {} users", users.size());
+            return ResponseEntity.ok(ApiResponse.success(users));
+        } catch (Exception e) {
+            logger.error("Error fetching users: {}", e.getMessage());
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.error(400, "Error fetching users: " + e.getMessage()));
+        }
     }
 }
