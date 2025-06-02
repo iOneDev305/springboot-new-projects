@@ -85,27 +85,30 @@ public class AuthController {
         }
     }
 
-    @PostMapping(value = "/register", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> registerUser(@RequestBody SignUpRequest signUpRequest) {
-        logger.info("Registration attempt for user: {}", signUpRequest.getUsername());
+    @PostMapping(value = "/register", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> registerUser(
+            @RequestParam("username") String username,
+            @RequestParam("email") String email,
+            @RequestParam("password") String password) {
+        logger.info("Registration attempt for user: {}", username);
 
         try {
-            if (userRepository.existsByUsername(signUpRequest.getUsername())) {
-                logger.warn("Registration failed: Username already taken - {}", signUpRequest.getUsername());
+            if (userRepository.existsByUsername(username)) {
+                logger.warn("Registration failed: Username already taken - {}", username);
                 return ResponseEntity.badRequest()
                         .body(ApiResponse.error(400, "Username is already taken!"));
             }
 
-            if (userRepository.existsByEmail(signUpRequest.getEmail())) {
-                logger.warn("Registration failed: Email already in use - {}", signUpRequest.getEmail());
+            if (userRepository.existsByEmail(email)) {
+                logger.warn("Registration failed: Email already in use - {}", email);
                 return ResponseEntity.badRequest()
                         .body(ApiResponse.error(400, "Email is already in use!"));
             }
 
             User user = new User();
-            user.setUsername(signUpRequest.getUsername());
-            user.setEmail(signUpRequest.getEmail());
-            user.setPassword(passwordEncoder.encode(signUpRequest.getPassword()));
+            user.setUsername(username);
+            user.setEmail(email);
+            user.setPassword(passwordEncoder.encode(password));
 
             User savedUser = userRepository.save(user);
             logger.info("User registered successfully: {} with ID: {}", savedUser.getUsername(), savedUser.getId());
