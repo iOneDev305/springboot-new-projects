@@ -1,4 +1,4 @@
-package com.news.app.domain;
+package com.news.app.domain.repository;
 
 import com.news.app.domain.modal.Module;
 import org.springframework.data.jpa.repository.JpaRepository;

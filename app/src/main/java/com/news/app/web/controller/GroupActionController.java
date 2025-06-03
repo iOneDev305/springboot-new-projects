@@ -1,7 +1,8 @@
-package com.news.app.web;
+package com.news.app.web.controller;
 
 import com.news.app.domain.modal.GroupAction;
-import com.news.app.domain.GroupActionRepository;
+import com.news.app.domain.repository.GroupActionRepository;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

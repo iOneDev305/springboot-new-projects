@@ -1,11 +1,11 @@
-package com.news.app.web;
+package com.news.app.web.controller;
 
 import com.news.app.domain.modal.GroupModuleAction;
-import com.news.app.domain.GroupModuleActionRepository;
-import com.news.app.domain.PermissionGroupRepository;
-import com.news.app.domain.ModuleRepository;
-import com.news.app.domain.GroupActionRepository;
 import com.news.app.domain.modal.PermissionGroup;
+import com.news.app.domain.repository.GroupActionRepository;
+import com.news.app.domain.repository.GroupModuleActionRepository;
+import com.news.app.domain.repository.ModuleRepository;
+import com.news.app.domain.repository.PermissionGroupRepository;
 import com.news.app.domain.modal.Module;
 import com.news.app.domain.modal.GroupAction;
 import org.springframework.beans.factory.annotation.Autowired;

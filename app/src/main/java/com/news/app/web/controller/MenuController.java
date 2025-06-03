@@ -1,7 +1,8 @@
-package com.news.app.web;
+package com.news.app.web.controller;
 
 import com.news.app.domain.modal.Menu;
-import com.news.app.domain.MenuRepository;
+import com.news.app.domain.repository.MenuRepository;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

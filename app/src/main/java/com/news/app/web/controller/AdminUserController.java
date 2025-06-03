@@ -1,9 +1,10 @@
-package com.news.app.web;
+package com.news.app.web.controller;
 
 import com.news.app.domain.modal.AdminUser;
-import com.news.app.domain.AdminUserRepository;
 import com.news.app.domain.modal.PermissionGroup;
-import com.news.app.domain.PermissionGroupRepository;
+import com.news.app.domain.repository.AdminUserRepository;
+import com.news.app.domain.repository.PermissionGroupRepository;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

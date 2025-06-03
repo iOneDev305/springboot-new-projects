@@ -1,8 +1,8 @@
-package com.news.app.web;
+package com.news.app.web.controller;
 
 import com.news.app.domain.modal.SubMenu;
-import com.news.app.domain.SubMenuRepository;
-import com.news.app.domain.MenuRepository;
+import com.news.app.domain.repository.MenuRepository;
+import com.news.app.domain.repository.SubMenuRepository;
 import com.news.app.domain.modal.Menu;
 
 import org.springframework.beans.factory.annotation.Autowired;
