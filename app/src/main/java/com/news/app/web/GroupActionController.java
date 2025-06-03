@@ -27,18 +27,25 @@ public class GroupActionController {
         return groupAction.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    @PostMapping
-    public GroupAction createGroupAction(@RequestBody GroupAction groupAction) {
+    @PostMapping("/create")
+    public GroupAction createGroupAction(@RequestParam String actionName) {
+        GroupAction groupAction = new GroupAction();
+        groupAction.setActionName(actionName);
         return groupActionRepository.save(groupAction);
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<GroupAction> updateGroupAction(@PathVariable Long id, @RequestBody GroupAction groupActionDetails) {
-        Optional<GroupAction> groupAction = groupActionRepository.findById(id);
-        return groupAction.map(action -> {
-            action.setActionName(groupActionDetails.getActionName());
-            return ResponseEntity.ok(groupActionRepository.save(action));
-        }).orElseGet(() -> ResponseEntity.notFound().build());
+    @PutMapping("/update/{id}")
+    public ResponseEntity<GroupAction> updateGroupAction(@PathVariable Long id, @RequestParam String actionName) {
+        Optional<GroupAction> groupActionOptional = groupActionRepository.findById(id);
+
+        if (!groupActionOptional.isPresent()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        GroupAction groupAction = groupActionOptional.get();
+        groupAction.setActionName(actionName);
+
+        return ResponseEntity.ok(groupActionRepository.save(groupAction));
     }
 
     @DeleteMapping("/{id}")

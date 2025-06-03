@@ -27,19 +27,27 @@ public class MenuController {
         return menu.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    @PostMapping
-    public Menu createMenu(@RequestBody Menu menu) {
+    @PostMapping("/create")
+    public Menu createMenu(@RequestParam String menuName, @RequestParam boolean isActive) {
+        Menu menu = new Menu();
+        menu.setMenuName(menuName);
+        menu.setActive(isActive);
         return menuRepository.save(menu);
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<Menu> updateMenu(@PathVariable Long id, @RequestBody Menu menuDetails) {
-        Optional<Menu> menu = menuRepository.findById(id);
-        return menu.map(m -> {
-            m.setMenuName(menuDetails.getMenuName());
-            m.setActive(menuDetails.isActive());
-            return ResponseEntity.ok(menuRepository.save(m));
-        }).orElseGet(() -> ResponseEntity.notFound().build());
+    @PutMapping("/update/{id}")
+    public ResponseEntity<Menu> updateMenu(@PathVariable Long id, @RequestParam String menuName, @RequestParam boolean isActive) {
+        Optional<Menu> menuOptional = menuRepository.findById(id);
+
+        if (!menuOptional.isPresent()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        Menu menu = menuOptional.get();
+        menu.setMenuName(menuName);
+        menu.setActive(isActive);
+
+        return ResponseEntity.ok(menuRepository.save(menu));
     }
 
     @DeleteMapping("/{id}")

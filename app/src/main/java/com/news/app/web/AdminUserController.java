@@ -2,6 +2,8 @@ package com.news.app.web;
 
 import com.news.app.domain.modal.AdminUser;
 import com.news.app.domain.AdminUserRepository;
+import com.news.app.domain.modal.PermissionGroup;
+import com.news.app.domain.PermissionGroupRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -16,6 +18,9 @@ public class AdminUserController {
     @Autowired
     private AdminUserRepository adminUserRepository;
 
+    @Autowired
+    private PermissionGroupRepository permissionGroupRepository;
+
     @GetMapping
     public List<AdminUser> getAllAdminUsers() {
         return adminUserRepository.findAll();
@@ -27,19 +32,32 @@ public class AdminUserController {
         return adminUser.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    @PostMapping
-    public AdminUser createAdminUser(@RequestBody AdminUser adminUser) {
+    @PostMapping("/create")
+    public AdminUser createAdminUser(@RequestParam String username, @RequestParam Long permissionGroupId) {
+        PermissionGroup permissionGroup = permissionGroupRepository.findById(permissionGroupId)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid permission group ID"));
+        AdminUser adminUser = new AdminUser();
+        adminUser.setUsername(username);
+        adminUser.setPermissionGroup(permissionGroup);
         return adminUserRepository.save(adminUser);
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<AdminUser> updateAdminUser(@PathVariable Long id, @RequestBody AdminUser adminUserDetails) {
-        Optional<AdminUser> adminUser = adminUserRepository.findById(id);
-        return adminUser.map(user -> {
-            user.setUsername(adminUserDetails.getUsername());
-            user.setPermissionGroup(adminUserDetails.getPermissionGroup());
-            return ResponseEntity.ok(adminUserRepository.save(user));
-        }).orElseGet(() -> ResponseEntity.notFound().build());
+    @PutMapping("/update/{id}")
+    public ResponseEntity<AdminUser> updateAdminUser(@PathVariable Long id, @RequestParam String username, @RequestParam Long permissionGroupId) {
+        Optional<AdminUser> adminUserOptional = adminUserRepository.findById(id);
+
+        if (!adminUserOptional.isPresent()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        AdminUser adminUser = adminUserOptional.get();
+        PermissionGroup permissionGroup = permissionGroupRepository.findById(permissionGroupId)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid permission group ID"));
+
+        adminUser.setUsername(username);
+        adminUser.setPermissionGroup(permissionGroup);
+
+        return ResponseEntity.ok(adminUserRepository.save(adminUser));
     }
 
     @DeleteMapping("/{id}")

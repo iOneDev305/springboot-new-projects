@@ -27,19 +27,27 @@ public class ModuleController {
         return module.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    @PostMapping
-    public Module createModule(@RequestBody Module module) {
+    @PostMapping("/create")
+    public Module createModule(@RequestParam String moduleName, @RequestParam boolean isView) {
+        Module module = new Module();
+        module.setModuleName(moduleName);
+        module.setView(isView);
         return moduleRepository.save(module);
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<Module> updateModule(@PathVariable Long id, @RequestBody Module moduleDetails) {
-        Optional<Module> module = moduleRepository.findById(id);
-        return module.map(mod -> {
-            mod.setModuleName(moduleDetails.getModuleName());
-            mod.setView(moduleDetails.isView());
-            return ResponseEntity.ok(moduleRepository.save(mod));
-        }).orElseGet(() -> ResponseEntity.notFound().build());
+    @PutMapping("/update/{id}")
+    public ResponseEntity<Module> updateModule(@PathVariable Long id, @RequestParam String moduleName, @RequestParam boolean isView) {
+        Optional<Module> moduleOptional = moduleRepository.findById(id);
+
+        if (!moduleOptional.isPresent()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        Module module = moduleOptional.get();
+        module.setModuleName(moduleName);
+        module.setView(isView);
+
+        return ResponseEntity.ok(moduleRepository.save(module));
     }
 
     @DeleteMapping("/{id}")

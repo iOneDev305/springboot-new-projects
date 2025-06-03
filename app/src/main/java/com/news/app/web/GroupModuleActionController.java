@@ -5,6 +5,9 @@ import com.news.app.domain.GroupModuleActionRepository;
 import com.news.app.domain.PermissionGroupRepository;
 import com.news.app.domain.ModuleRepository;
 import com.news.app.domain.GroupActionRepository;
+import com.news.app.domain.modal.PermissionGroup;
+import com.news.app.domain.modal.Module;
+import com.news.app.domain.modal.GroupAction;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -39,19 +42,25 @@ public class GroupModuleActionController {
         return groupModuleAction.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    @PostMapping
-    public ResponseEntity<GroupModuleAction> createGroupModuleAction(@RequestBody GroupModuleAction groupModuleAction) {
-        // Basic validation to ensure referenced entities exist
-        if (!permissionGroupRepository.existsById(groupModuleAction.getPermissionGroup().getId()) ||
-            !moduleRepository.existsById(groupModuleAction.getModule().getId()) ||
-            !groupActionRepository.existsById(groupModuleAction.getGroupAction().getId())) {
-            return ResponseEntity.badRequest().build();
-        }
+    @PostMapping("/create")
+    public ResponseEntity<GroupModuleAction> createGroupModuleAction(@RequestParam Long groupId, @RequestParam Long moduleId, @RequestParam Long actionId) {
+        PermissionGroup permissionGroup = permissionGroupRepository.findById(groupId)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid permission group ID"));
+        Module module = moduleRepository.findById(moduleId)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid module ID"));
+        GroupAction groupAction = groupActionRepository.findById(actionId)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid action ID"));
+
+        GroupModuleAction groupModuleAction = new GroupModuleAction();
+        groupModuleAction.setPermissionGroup(permissionGroup);
+        groupModuleAction.setModule(module);
+        groupModuleAction.setGroupAction(groupAction);
+
         return ResponseEntity.ok(groupModuleActionRepository.save(groupModuleAction));
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<GroupModuleAction> updateGroupModuleAction(@PathVariable Long id, @RequestBody GroupModuleAction groupModuleActionDetails) {
+    @PutMapping("/update/{id}")
+    public ResponseEntity<GroupModuleAction> updateGroupModuleAction(@PathVariable Long id, @RequestParam Long groupId, @RequestParam Long moduleId, @RequestParam Long actionId) {
         Optional<GroupModuleAction> groupModuleActionOptional = groupModuleActionRepository.findById(id);
 
         if (!groupModuleActionOptional.isPresent()) {
@@ -60,16 +69,16 @@ public class GroupModuleActionController {
 
         GroupModuleAction groupModuleAction = groupModuleActionOptional.get();
 
-        // Basic validation for updates as well
-        if (groupModuleActionDetails.getPermissionGroup() != null && !permissionGroupRepository.existsById(groupModuleActionDetails.getPermissionGroup().getId()) ||
-            groupModuleActionDetails.getModule() != null && !moduleRepository.existsById(groupModuleActionDetails.getModule().getId()) ||
-            groupModuleActionDetails.getGroupAction() != null && !groupActionRepository.existsById(groupModuleActionDetails.getGroupAction().getId())) {
-            return ResponseEntity.badRequest().build();
-        }
+        PermissionGroup permissionGroup = permissionGroupRepository.findById(groupId)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid permission group ID"));
+        Module module = moduleRepository.findById(moduleId)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid module ID"));
+        GroupAction groupAction = groupActionRepository.findById(actionId)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid action ID"));
 
-        groupModuleAction.setPermissionGroup(groupModuleActionDetails.getPermissionGroup());
-        groupModuleAction.setModule(groupModuleActionDetails.getModule());
-        groupModuleAction.setGroupAction(groupModuleActionDetails.getGroupAction());
+        groupModuleAction.setPermissionGroup(permissionGroup);
+        groupModuleAction.setModule(module);
+        groupModuleAction.setGroupAction(groupAction);
 
         return ResponseEntity.ok(groupModuleActionRepository.save(groupModuleAction));
     }

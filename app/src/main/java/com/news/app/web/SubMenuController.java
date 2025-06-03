@@ -3,6 +3,8 @@ package com.news.app.web;
 import com.news.app.domain.modal.SubMenu;
 import com.news.app.domain.SubMenuRepository;
 import com.news.app.domain.MenuRepository;
+import com.news.app.domain.modal.Menu;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -31,17 +33,18 @@ public class SubMenuController {
         return subMenu.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    @PostMapping
-    public ResponseEntity<SubMenu> createSubMenu(@RequestBody SubMenu subMenu) {
-        // Basic validation to ensure referenced menu exists
-        if (!menuRepository.existsById(subMenu.getMenu().getId())) {
-            return ResponseEntity.badRequest().build();
-        }
+    @PostMapping("/create")
+    public ResponseEntity<SubMenu> createSubMenu(@RequestParam Long menuId, @RequestParam String routeName) {
+        Menu menu = menuRepository.findById(menuId)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid menu ID"));
+        SubMenu subMenu = new SubMenu();
+        subMenu.setMenu(menu);
+        subMenu.setRouteName(routeName);
         return ResponseEntity.ok(subMenuRepository.save(subMenu));
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<SubMenu> updateSubMenu(@PathVariable Long id, @RequestBody SubMenu subMenuDetails) {
+    @PutMapping("/update/{id}")
+    public ResponseEntity<SubMenu> updateSubMenu(@PathVariable Long id, @RequestParam Long menuId, @RequestParam String routeName) {
         Optional<SubMenu> subMenuOptional = subMenuRepository.findById(id);
 
         if (!subMenuOptional.isPresent()) {
@@ -50,13 +53,11 @@ public class SubMenuController {
 
         SubMenu subMenu = subMenuOptional.get();
 
-        // Basic validation to ensure referenced menu exists
-        if (subMenuDetails.getMenu() != null && !menuRepository.existsById(subMenuDetails.getMenu().getId())) {
-            return ResponseEntity.badRequest().build();
-        }
+        Menu menu = menuRepository.findById(menuId)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid menu ID"));
 
-        subMenu.setMenu(subMenuDetails.getMenu());
-        subMenu.setRouteName(subMenuDetails.getRouteName());
+        subMenu.setMenu(menu);
+        subMenu.setRouteName(routeName);
 
         return ResponseEntity.ok(subMenuRepository.save(subMenu));
     }

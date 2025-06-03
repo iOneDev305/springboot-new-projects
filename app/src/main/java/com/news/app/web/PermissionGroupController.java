@@ -27,19 +27,27 @@ public class PermissionGroupController {
         return permissionGroup.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    @PostMapping
-    public PermissionGroup createPermissionGroup(@RequestBody PermissionGroup permissionGroup) {
+    @PostMapping("/create")
+    public PermissionGroup createPermissionGroup(@RequestParam String groupName, @RequestParam boolean isActive) {
+        PermissionGroup permissionGroup = new PermissionGroup();
+        permissionGroup.setGroupName(groupName);
+        permissionGroup.setActive(isActive);
         return permissionGroupRepository.save(permissionGroup);
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<PermissionGroup> updatePermissionGroup(@PathVariable Long id, @RequestBody PermissionGroup permissionGroupDetails) {
-        Optional<PermissionGroup> permissionGroup = permissionGroupRepository.findById(id);
-        return permissionGroup.map(group -> {
-            group.setGroupName(permissionGroupDetails.getGroupName());
-            group.setActive(permissionGroupDetails.isActive());
-            return ResponseEntity.ok(permissionGroupRepository.save(group));
-        }).orElseGet(() -> ResponseEntity.notFound().build());
+    @PutMapping("/update/{id}")
+    public ResponseEntity<PermissionGroup> updatePermissionGroup(@PathVariable Long id, @RequestParam String groupName, @RequestParam boolean isActive) {
+        Optional<PermissionGroup> permissionGroupOptional = permissionGroupRepository.findById(id);
+
+        if (!permissionGroupOptional.isPresent()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        PermissionGroup permissionGroup = permissionGroupOptional.get();
+        permissionGroup.setGroupName(groupName);
+        permissionGroup.setActive(isActive);
+
+        return ResponseEntity.ok(permissionGroupRepository.save(permissionGroup));
     }
 
     @DeleteMapping("/{id}")
